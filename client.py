@@ -7,7 +7,7 @@ import websockets
 
 
 async def ask(question: str) -> str:
-    async with websockets.connect("ws://localhost:8000/ws/ask") as ws:
+    async with websockets.connect("ws://localhost:8000/api/v1/ws/ask") as ws:
         await ws.send(json.dumps({"question": question, "use_rag": True, "top_k": 3}))
         full = ""
         async for msg in ws:
@@ -24,7 +24,7 @@ async def ask(question: str) -> str:
 
 
 async def run_agent(task: str) -> None:
-    async with websockets.connect("ws://localhost:8000/ws/agent") as ws:
+    async with websockets.connect("ws://localhost:8000/api/v1/ws/agent") as ws:
         await ws.send(json.dumps({"task": task, "max_steps": 5}))
         async for msg in ws:
             evt = json.loads(msg)

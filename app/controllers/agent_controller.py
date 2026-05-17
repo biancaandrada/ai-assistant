@@ -1,21 +1,16 @@
-"""Controller for the ReAct agent."""
-from fastapi import HTTPException
+from typing import AsyncIterator
 
-from ..models import AgentRequest, AgentResponse
-from ..agent import run_agent
+from ..schemas.agent import AgentRequest, AgentResponse
+from ..services.agent_service import AgentService
 
 
 class AgentController:
-    """Orchestrates the /agent flow."""
+    def __init__(self, agent: AgentService) -> None:
+        self._agent = agent
 
-    @staticmethod
-    def _validate(req: AgentRequest) -> None:
-        if not req.task.strip():
-            raise HTTPException(status_code=400, detail="task is empty")
-        if req.max_steps < 1 or req.max_steps > 20:
-            raise HTTPException(status_code=400, detail="max_steps must be between 1 and 20")
+    async def handle(self, req: AgentRequest) -> AgentResponse:
+        return await self._agent.run(req.task, max_steps=req.max_steps)
 
-    @classmethod
-    async def handle(cls, req: AgentRequest) -> AgentResponse:
-        cls._validate(req)
-        return await run_agent(req.task, max_steps=req.max_steps)
+    async def stream(self, req: AgentRequest) -> AsyncIterator[dict]:
+        async for event in self._agent.stream_steps(req.task, max_steps=req.max_steps):
+            yield event

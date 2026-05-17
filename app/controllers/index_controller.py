@@ -1,21 +1,12 @@
-"""Controller for document indexing."""
-from fastapi import HTTPException
-
-from ..rag import add_documents
+from ..schemas.index import IndexRequest, IndexResponse
+from ..services.rag_service import RAGService
 
 
 class IndexController:
-    """Orchestrates uploads into the vector store."""
+    def __init__(self, rag: RAGService) -> None:
+        self._rag = rag
 
-    @staticmethod
-    def _validate(docs: list[str]) -> None:
-        if not docs:
-            raise HTTPException(status_code=400, detail="docs list is empty")
-        if any(not d.strip() for d in docs):
-            raise HTTPException(status_code=400, detail="docs cannot contain empty strings")
-
-    @classmethod
-    async def handle(cls, docs: list[str]) -> dict:
-        cls._validate(docs)
-        await add_documents(docs)
-        return {"indexed": len(docs), "status": "ok"}
+    async def handle(self, req: IndexRequest) -> IndexResponse:
+        docs = [(d.id, d.text, d.metadata) for d in req.documents]
+        count = await self._rag.index_documents(docs)
+        return IndexResponse(indexed=count)
