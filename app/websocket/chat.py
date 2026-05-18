@@ -47,8 +47,9 @@ async def ws_ask(ws: WebSocket):
 
             await ws.send_json({"type": "start"})
             try:
-                async for token in ctrl.stream(req):
-                    await ws.send_json({"type": "token", "data": token})
+                async for event in ctrl.stream_events(req):
+                    # Forward sources + tokens as they're produced
+                    await ws.send_json(event)
             except AppError as e:
                 await ws.send_json({"type": "error", "data": e.to_dict()})
             await ws.send_json({"type": "end"})

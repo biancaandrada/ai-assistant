@@ -39,16 +39,17 @@ class Settings(BaseSettings):
     chroma_path: str = "./chroma_db"
     chroma_collection: str = "documents"
 
-    # Chunking
-    chunk_size: int = 1000
-    chunk_overlap: int = 150
+    # Chunking — smaller chunks = more precise retrieval.
+    # ~400 chars ≈ 80-100 tokens, big enough for context, small enough to discriminate.
+    chunk_size: int = 400
+    chunk_overlap: int = 60
 
     # Agent
     agent_max_steps: int = 5
     agent_max_steps_hard_cap: int = 20
 
     # Ask
-    rag_default_top_k: int = 3
+    rag_default_top_k: int = 8
     rag_max_top_k: int = 20
 
 

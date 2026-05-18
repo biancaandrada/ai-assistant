@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Assistant</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo">✦</div>
+                <div>
+                    <div class="brand-title">AI Assistant</div>
+                    <div class="brand-sub">RAG + Agent</div>
+                </div>
+            </div>
+
+            <section class="upload">
+                <h2>Knowledge base</h2>
+                <p class="hint">Drop PDF files here to make them searchable.</p>
+
+                <label id="drop-zone" class="drop-zone" for="file-input">
+                    <div class="drop-icon">⬆</div>
+                    <div class="drop-title">Drop a PDF</div>
+                    <div class="drop-sub">or click to browse</div>
+                    <input id="file-input" type="file" accept="application/pdf" hidden />
+                </label>
+
+                <ul id="file-list" class="file-list"></ul>
+            </section>
+
+            <section class="settings">
+                <h2>Settings</h2>
+                <label class="toggle">
+                    <input id="use-rag" type="checkbox" checked />
+                    <span>Use knowledge base</span>
+                </label>
+                <label class="toggle">
+                    <input id="agent-mode" type="checkbox" />
+                    <span>Agent mode</span>
+                </label>
+                <label class="slider">
+                    <span>Top-K: <strong id="topk-val">8</strong></span>
+                    <input id="topk" type="range" min="1" max="20" value="8" />
+                </label>
+            </section>
+
+            <div class="status">
+                <span id="status-dot" class="dot"></span>
+                <span id="status-text">connecting…</span>
+            </div>
+        </aside>
+
+        <main class="chat">
+            <header class="chat-header">
+                <h1>Chat</h1>
+                <button id="clear-btn" class="ghost-btn">Clear</button>
+            </header>
+
+            <div id="messages" class="messages">
+                <div class="msg msg-bot welcome">
+                    <div class="msg-bubble">
+                        <p>Hi! Upload PDFs in the left panel, then ask me anything about them.</p>
+                        <p>Toggle <strong>Agent mode</strong> to see step-by-step reasoning.</p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="input-form" class="input-bar">
+                <textarea
+                    id="input"
+                    rows="1"
+                    placeholder="Ask a question… (Shift+Enter for newline)"
+                    autocomplete="off"
+                ></textarea>
+                <button id="send-btn" type="submit" title="Send">↑</button>
+            </form>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

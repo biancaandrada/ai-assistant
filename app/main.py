@@ -4,12 +4,19 @@ Wires settings → logging → clients → repos → services → controllers �
 """
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .api.v1.router import api_router
 from .clients import ChromaClient, OpenAIClient
-from .controllers import AgentController, AskController, IndexController
+from .controllers import (
+    AgentController, AskController, DocumentsController,
+    IndexController, UploadController,
+)
 from .core.config import Settings, get_settings
 from .core.logging import configure_logging, get_logger
 from .core.middleware import RequestContextMiddleware, register_exception_handlers
@@ -55,6 +62,8 @@ def _build_container(settings: Settings) -> dict:
         "ask_controller": AskController(rag),
         "agent_controller": AgentController(agent),
         "index_controller": IndexController(rag),
+        "upload_controller": UploadController(rag),
+        "documents_controller": DocumentsController(vectors),
     }
 
 
@@ -93,6 +102,15 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     app.include_router(api_router, prefix=settings.api_prefix)
     app.include_router(ws_router, prefix=settings.api_prefix)
+
+    # Frontend (single-page app served from app/static/)
+    static_dir = Path(__file__).resolve().parent / "static"
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+        @app.get("/", include_in_schema=False)
+        async def root():
+            return FileResponse(static_dir / "index.html")
 
     return app
 

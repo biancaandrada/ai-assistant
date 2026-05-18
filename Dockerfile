@@ -12,7 +12,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy code
+# Copy code (includes static/ frontend assets)
 COPY app ./app
 COPY pyproject.toml .
 

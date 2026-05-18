@@ -7,3 +7,5 @@ chromadb>=0.5
 wsproto>=1.2
 websockets>=13
 python-dotenv>=1.0
+pypdf>=4.0
+python-multipart>=0.0.9

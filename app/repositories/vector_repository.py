@@ -57,3 +57,53 @@ class VectorRepository:
 
     async def count(self) -> int:
         return self._collection.count()
+
+    async def list_sources(self) -> list[dict]:
+        """Distinct uploaded files, with chunk count and total chars.
+
+        Reads metadata.source from all stored chunks and aggregates.
+        """
+        try:
+            res = self._collection.get(include=["metadatas", "documents"])
+        except Exception as e:
+            raise ExternalServiceError(f"vector store list failed: {e}") from e
+
+        metas = res.get("metadatas") or []
+        docs = res.get("documents") or []
+        agg: dict[str, dict] = {}
+        for meta, doc in zip(metas, docs):
+            source = (meta or {}).get("source") or (meta or {}).get("filename") or "unknown"
+            entry = agg.setdefault(source, {"source": source, "chunks": 0, "chars": 0})
+            entry["chunks"] += 1
+            entry["chars"] += len(doc or "")
+        return sorted(agg.values(), key=lambda x: x["source"])
+
+    async def delete_by_source(self, source: str) -> int:
+        """Delete all chunks belonging to a source.
+
+        Uses the same fallback logic as `list_sources` — a chunk belongs to
+        `source` if its metadata.source == source, OR metadata.filename == source,
+        OR (source == "unknown" AND both fields are missing). This matters for
+        legacy chunks indexed before the `source` field was added.
+        """
+        try:
+            res = self._collection.get(include=["metadatas"])
+            all_ids = res.get("ids") or []
+            metas = res.get("metadatas") or []
+
+            ids_to_delete: list[str] = []
+            for chunk_id, meta in zip(all_ids, metas):
+                meta = meta or {}
+                actual = meta.get("source") or meta.get("filename") or "unknown"
+                if actual == source:
+                    ids_to_delete.append(chunk_id)
+
+            if ids_to_delete:
+                self._collection.delete(ids=ids_to_delete)
+                logger.info(f"deleted {len(ids_to_delete)} chunks for source: {source}")
+            else:
+                logger.warning(f"no chunks found for source: {source}")
+            return len(ids_to_delete)
+        except Exception as e:
+            logger.error(f"failed to delete chunks for source {source}: {e}")
+            raise ExternalServiceError(f"vector store delete failed: {e}") from e

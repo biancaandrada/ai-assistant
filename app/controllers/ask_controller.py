@@ -20,3 +20,10 @@ class AskController:
             question=req.question, use_rag=req.use_rag, top_k=req.top_k
         ):
             yield tok
+
+    async def stream_events(self, req: AskRequest) -> AsyncIterator[dict]:
+        """Yields {type:"sources", data:[...]} followed by {type:"token", data:...}."""
+        async for event in self._rag.stream_answer_with_sources(
+            question=req.question, use_rag=req.use_rag, top_k=req.top_k
+        ):
+            yield event
